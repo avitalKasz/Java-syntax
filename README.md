@@ -1,0 +1,201 @@
+avital_kasz
+eyalhod
+
+
+=============================
+=      File description     =
+=============================
+
+main package - this package handles the whole program.
+    Sjavac.java - this class handles and starts the whole program.
+    ReadFile - this class attempts to read the Sjavac file.
+    Block - this class describe a scope in Sjavac: section of code that could be described as all the global
+     members, or
+                  specific method, or inner scope such as if or while section.
+    ExcuteLine - this class manages the action the have been just read from the Sjavac code.
+    FindLineType - this enum finds and creates the type of the specific line being checked.
+    Functions - thi class describes method block, hold all list of all the lines refer to it, can add
+     variable that
+                 declared as argument in the signature to new Variable objects,
+                 and contains a list of the their types by order.
+    exceptions - this package maintains all the exceptions relevant to the main package.
+        InvalidArgsInMain - this class throws an exception when there is the wrong amount of arguments given
+         by user.
+
+
+parser package - this package handles all that has to do with the first reading of the file.
+    Parser - this class gathers all the relevant information each line has, saves it in an object for future
+     usage.
+    ExtractArguments - this class is an abstract class, its purpose is to create new objects of type LineType.
+    LineType - this class created the object maintaining all the information needed.
+    IfOrWhileParser - this class inherits from ExtractArguments its purpose is to create new objects of type
+                      LineType according to if and while lines.
+    MethodInvokeParser - this class inherits from ExtractArguments its purpose is to create new objects of
+     type
+                         LineType according creating new method.
+    MethodSignatureParser - this class inherits from ExtractArguments
+                            its purpose is to create new objects of type LineType according to calling a
+                             function.
+    exception package - this package handles all exceptions relevant to the parser package.
+        ActionSyntaxInvalidException - this class throws an exception when the lines syntax is invalid.
+        IfAndWileException -  this class inherits from ActionSyntaxInvalidException throws an exception when
+         the syntax
+                              of if or while are invalid.
+        InvalidLineLocationException - this class inherits from ActionSyntaxInvalidException and throws an
+         exception when there is an action being called to be done in an invalid location.
+
+variables package - this package handles all that has to do with the variables.
+    Variable - this class defines variable in this project
+    Types - define the types in Sjavac. support the following:
+             checking if given value is in the same type as the enum member.
+             if the given type is approved by enum member.
+    VariableFactory - this class create variable object from given line and add it to the block map directly.
+    exception package - this package handles all exceptions relevant to the variables package.
+        Variable Exception - this class is  called when a variable is not valid.
+        InvalidCastingException - this class inherits from VariableException and throws an exception when
+                                  a variable casted in an invalid way
+        InvalidDeclarationException - this class inherits from VariableException and throws an exception when
+          a variable declaration is invalid
+        InvalidVariableNameException - this class inherits from VariableException and throws an exception
+         when the
+                                       variable name is invalid
+
+handlers package - this package handles the different validity situations of the file being read from.
+    CloseHandler - this class handles the case of encounter } sign.
+    IfAndWileHandler - this class handles the situation when encounter if or while statements.
+    MethodHandler - this class handles the situation when encounter method signature or method call.
+    VariableHandler - this class handles the case of encounter variable declaration line.
+    exception package - this package handles all exceptions relevant to the handlers package.
+        InvalidActionTermsException - this class throws an exception when the content of the action is
+         invalid.
+        InvalidMethodSignatureException - this class inherits from InvalidActionTermException throws an
+         exception when the signature is invalid.
+        ScopeNotClosedException - this class inherits from InvalidActionTermException throws an exception
+         when the
+                                  scope is not closed properly.
+
+
+=============================
+=          Design           =
+=============================
+
+In order to check the validity of Sjava file, the program read the file twice, first time as Strings from a
+file, and second time iterating over wrap lines objects the contain the content of a line and its purpose.
+
+At the end of the first reading process, the program would split the lines that are in a global scope
+and the ones inside methods, so all the lines related to a global scope will be valid, and all the methods
+inside blocks will be stored in a data structure, each of the methods will be stored as Function object that
+hold a pool of lines that placed inside their scope.
+The first Reading is using bufferReading for iterating over the file, and for each line, it create an object
+from it, and store the data from the line for future validation and usage, during process it make some basic
+validation tests, like if the line ends with one of the suffix: ";{}" and validate methods' signatures.
+
+After this, the advanced reading method get invoked (named "readFunctionsData"), this method iterates over all
+ the methods that exist in the sjava code, and test for validity of the lines objects ("LineType") that stored
+  in them, and for each of that it check for validity.
+
+
+Some of the design principals we use in this program:
+Single choice principal - The enum Classes such as Types and FindLineType that contains a lot of logic related
+to the types and accepted actions in javas are only there.
+Encapsulate - the implementation of ReadFile encapsulate the process of reading and validation of the file.
+Open close -  the Sjavac class represents to the client only the main actions occur in this program and
+shallow the implementation of it.
+Factory - The VariableFactory and Parser classes use the factory design pattern, get input and create some
+Objects accordingly.
+parser - this was useful when we wanted to know what kind of line we got to.
+in parser package we analyzed the different kind of line.
+each line we extracted the relevant information for future usage.
+
+=============================
+=  Implementation details   =
+=============================
+
+In order to implement an object represent a scope, we write Block and Function class. the Block class
+represent the if/while and global scope, so the Function class is inheritor of Block class, and represent
+specifically a method scope. we chose this kind of partition between these scope because the behavior excepted
+from a method is different from behavior of the others, in example every method saves LinkedList of its
+arguments, and attempt to save those as local variables, this kind of behavior is unique for function.
+Another issue of implementation, is that we created some static variable in ReadFile that used for counting
+the closer blocks, for storing all the method sections encounter while iterate the file and more.
+
+In order to parse the sjava code, we use Enum class named FundLineType, this line use REGEX to determinate
+which action this line related to. if it none is found, then it would throw an exception.
+
+For understanding if casting or declaration of a variable is valid or not, related to type issues,
+the program use the Enum class named Types, this class hold all the logic related to Types in sjava, such as
+which type accept the other, what are the types in sjava, and more.
+
+In order to implement an object represent a scope, we write Block and Function class. the Block class
+represent the if/while and global scope, so the Function class is inheritor of Block class, and represent
+specifically a method scope. we chose this kind of partition between these scope becuase the behavior excepted
+ from a method is different from behavior of the others, in example every method saves LinkedList of its
+ arguments, and attempt to save those as local variabels, this kind of behavior is unique for function.
+Another issue of implementation, is that we created some static variable in ReadFile that used for counting
+the closer blocks, for storing all the method sections encounter while iterate the file and more.
+
+In order to parse the sjava code, we use Enum class named FindLineType, this line use REGEX to determinate
+which action this line related to. if it none is found, then it would throw an exception.
+
+For understanding if casting or declaration of a variable is valid or not, related to type issues,
+the program use the Enum class named Types, this class hold all the logic related to Types in sjava, such as
+which type accept the other, what are the types in sjava, and more.
+
+
+
+
+
+=============================
+=    Answers to questions   =
+=============================
+
+Error Handing 6.1:
+Anytime an error or a syntax issue occur, it would throw an exception with an informative message of the
+problem. Every package has it own exceptions sub package, and in every one of them has a super class that all
+the other classes in the sub package are inherited from, so when attempting to catch an exception in the main
+package it would try to catch only the higher hierarchy of exception classes
+
+
+How would you modify your code to add new method types (e.g., float)?
+add any modifier to the enum class named Types, as we wish.
+add to the new modifier added the appropriate Pattern and a string of the new name type, and the appropriate
+logic needed.
+
+
+–which modifications/extensions you would have to make in your code
+ in order to support Different methods’ types (i.e int foo()):
+
+we would add a new modifier to enum Types,
+in the enum FindLineType we will add to the regex any one of the Type options.
+will add another field to the Functions class, that holds the return type wanted.
+and when we check if the signature statement is valid, we will add the type to the new field we added.
+and each time we hit a return statement (in ExecuteLine) we will add another ultimatum,
+checking that the the type being returned matches the signature return type.
+
+
+- which modifications/extensions you would have to make in your code
+in order to support classes?
+
+the way we check the program now is as we are checking one class only.
+to support a file that has many class all we need to is add an external class that manages all the different
+ class.
+we will create a data structure that holds an object of class, and each time we reach a new class we checks
+ it validity,
+meaning it is valid syntax wise.
+the we send it to our current program, all the validity tests we have there now are accurate for a class.
+
+
+this regex is used for determinate a signature of a method:
+[\t ]*void[\t ]+\\w.*[\t ]*[(][ \t]*.*[ \t]*[)][\t ]*\\{[\t ]*
+In addition to accept zero or more white spaces and tabs in the signature, I used
+[ \t]* as separator between every sign, for guarantee the line ends with { I put
+this sign at the end, in addition to verify pretenses, I search for:
+[(][ \t]*.*[ \t]*[)]
+so even no argument in a method would be accept, as long as many white spaces there.
+
+This regex is used for finding the type and modifier of a variable:
+[ \t]+\w+$|\w+[ \t]*[,;=]
+using the Matcher.find method, the program can split the variable line into two parts,
+modifier & type, and the variable name and value (if exists).
+in this regex I used or operator to allow 2 options, the first is \w signs ending, specifically for
+method arguments, and the second one for normal variable declaration and casting.
